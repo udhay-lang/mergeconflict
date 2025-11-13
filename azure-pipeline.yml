@@ -1,0 +1,40 @@
+# Maven Build Pipeline in Azure DevOps
+
+trigger:
+- main   # or your branch name
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+# Step 1: Checkout code
+- task: Checkout@1
+  displayName: 'Checkout source code'
+
+# Step 2: Set up JDK
+- task: UseJavaVersion@1
+  inputs:
+    versionSpec: '17'
+    jdkArchitecture: 'x64'
+  displayName: 'Set up JDK 17'
+
+# Step 3: Build with Maven
+- task: Maven@3
+  displayName: 'Build using Maven'
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'clean install'
+    publishJUnitResults: true
+    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+    javaHomeOption: 'JDKVersion'
+    jdkVersionOption: '1.17'
+    mavenOptions: '-Xmx3072m'
+    mavenSetM2Home: true
+
+# Step 4: Publish build artifacts
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifacts'
+  inputs:
+    PathtoPublish: '$(System.DefaultWorkingDirectory)/target'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
